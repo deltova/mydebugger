@@ -13,6 +13,7 @@ typedef struct {
     status_e status;
     int pid;
     mem_mapping_t mapping;
+    char *program_name;
 }   debugger_status_t;
 
 typedef void (*handler)(char *, debugger_status_t*);

@@ -66,8 +66,8 @@ int main(int argc, char **argv)
     }
     else
     {
-        int status;
         mem_mapping_t info = {.beg_addr = 0, .end_addr = 0};
+        int status;
         if (waitpid(pid, &status, 0))
         {
             init(pid);
@@ -76,7 +76,8 @@ int main(int argc, char **argv)
         debugger_status_t global_status = {
             .status = INPUT_WAIT,
             .pid = pid,
-            .mapping = info
+            .mapping = info,
+            .program_name = argv[1]
         };
         for (;;)
         {
