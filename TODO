@@ -1,0 +1,6 @@
+print current instruction
+Accelerate breakpoint continue using hardware bp
+Use Dwarf info:
+    break on specific line
+    print code
+    allow user to print variable
