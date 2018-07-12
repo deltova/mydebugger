@@ -55,6 +55,13 @@ void bp_handler(char *input, debugger_status_t *global_stat)
 {
     unsigned long addr = resolve_addr(input + 2, global_stat);
     list_push(global_stat->breakpoint_list, addr);
+    void* addr_bp = (int*)addr;
+    long ret;
+    ret = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
+    if (ret < 0)
+        printf("ERROR peektext\n");
+    else
+        printf("%x\n", ret);
     printf("Added breakpoint at Address: 0x%lx\n", addr);
 }
 
