@@ -1,7 +1,7 @@
-#ifndef DEFINE_H
-#define DEFINE_H
+#pragma once
+#include <vector>
+#include <string>
 #include "memory_mapping.h"
-#include "list.h"
 
 typedef enum {
     CONTINUE,
@@ -9,12 +9,11 @@ typedef enum {
 }   status_e;
 
 typedef struct {
-    list(unsigned long, breakpoint_list);
+    std::vector<unsigned long> breakpoint_list;
     status_e status;
     int pid;
     mem_mapping_t mapping;
     char *program_name;
 }   debugger_status_t;
 
-typedef void (*handler)(char *, debugger_status_t*);
-#endif
+typedef void (*handler)(std::string, debugger_status_t*);

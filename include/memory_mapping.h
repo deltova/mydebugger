@@ -1,5 +1,4 @@
-#ifndef MEMORY_MAPPING_H
-#define MEMORY_MAPPING_H
+#pragma once
 #include <stddef.h>
 
 typedef struct {
@@ -8,5 +7,3 @@ typedef struct {
 } mem_mapping_t;
 
 mem_mapping_t dump_mem(int, char*);
-
-#endif

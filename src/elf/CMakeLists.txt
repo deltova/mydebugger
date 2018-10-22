@@ -1,5 +1,5 @@
 add_library(${MYGDB}_elf STATIC
-    info_elf.c
+    info_elf.cc
 )
 target_link_libraries(${MYGDB}_elf PUBLIC bfd)
 #add_dependencies(${TC_PROJECT}_ast ${TC_PROJECT}_parse)

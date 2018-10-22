@@ -1,5 +1,5 @@
 add_library(${MYGDB}_command STATIC
-    cmd_handler.c
+    cmd_handler.cc
 )
 add_dependencies(${MYGDB}_command ${MYGDB}_elf)
 target_link_libraries(${MYGDB}_command PRIVATE ${MYGDB}_elf)
