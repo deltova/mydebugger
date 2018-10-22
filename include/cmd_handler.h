@@ -9,5 +9,6 @@ void bp_handler(char*, debugger_status_t*);
 void print_reg_handler(char*, debugger_status_t*);
 void continue_handler(char*, debugger_status_t*);
 void next_handler(char*, debugger_status_t*);
+void help_handler(char *input, debugger_status_t *global_stat);
 
 #endif

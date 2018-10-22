@@ -22,7 +22,7 @@ handler input_handlers[] =
     default_handler,
     default_handler,
     default_handler,
-    default_handler,
+    help_handler,
     default_handler,
     default_handler,
     default_handler,

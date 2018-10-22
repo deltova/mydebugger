@@ -9,7 +9,6 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-
 static mem_mapping_t fill(char *line, char *exec_name)
 {
     mem_mapping_t res = {.beg_addr = 0, .end_addr = 0};
@@ -26,6 +25,11 @@ static mem_mapping_t fill(char *line, char *exec_name)
         res.beg_addr = from;
         res.end_addr = to;
     }
+    else
+    {
+        res.beg_addr = 0;
+        res.end_addr = 0;
+    }
     return res;
 }
 
@@ -41,6 +45,8 @@ static mem_mapping_t parse_and_fill(FILE *file, char *exec_name)
         (*line)[len - 1] = 0;
         printf("%s\n", *line);
         res = fill(*line, exec_name);
+        if (res.beg_addr == res.end_addr && res.beg_addr == 0)
+            break;
     }
     while (!res.beg_addr);
     free(size);

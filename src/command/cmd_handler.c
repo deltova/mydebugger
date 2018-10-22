@@ -13,6 +13,7 @@ static struct user_regs_struct get_regs(debugger_status_t* global_stat)
     ptrace(PTRACE_GETREGS, global_stat->pid, NULL, &regs);
     return regs;
 }
+
 static ulli get_specific_register(char *reg_name, debugger_status_t *global_stat)
 {
     struct user_regs_struct registers = get_regs(global_stat);
@@ -20,6 +21,16 @@ static ulli get_specific_register(char *reg_name, debugger_status_t *global_stat
     while(strcmp(regs[i], reg_name) && i < 26)
         ++i;
     return *(ulli*)(((char*)&registers + sizeof(ulli) * i));
+}
+
+void help_handler(char *input, debugger_status_t *global_stat)
+{
+    printf("Available command:\n");
+    printf("\tb $addr: set a breakpoint at $addr\n");
+    printf("\tc: Continue to the next breakpoint\n");
+    printf("\th: print the helper of commands\n");
+    printf("\tn: Go to next instruction\n");
+    printf("\tp $register: print the value of the $register\n");
 }
 
 void print_reg_handler(char *input, debugger_status_t *global_stat)
