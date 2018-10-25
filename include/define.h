@@ -9,7 +9,12 @@ typedef enum {
 }   status_e;
 
 typedef struct {
-    std::vector<unsigned long> breakpoint_list;
+    uintptr_t addr;
+    uint32_t old_byte;
+} breakpoint_t;
+
+typedef struct {
+    std::vector<breakpoint_t> breakpoint_list;
     status_e status;
     int pid;
     mem_mapping_t mapping;

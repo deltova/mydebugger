@@ -18,30 +18,32 @@ static struct user_regs_struct get_regs(debugger_status_t* global_stat)
     return regs;
 }
 
-static ulli get_specific_register(std::string reg_name, debugger_status_t *global_stat)
+static uintptr_t get_specific_register(std::string reg_name,
+                                debugger_status_t *global_stat)
 {
     struct user_regs_struct registers = get_regs(global_stat);
     int i = 0;
     while(regs[i] != reg_name && i < 26)
         ++i;
-    return *(ulli*)(((char*)&registers + sizeof(ulli) * i));
+    return *(uintptr_t*)(((char*)&registers + sizeof(ulli) * i));
 }
 
-static int need_break(debugger_status_t global_stat, ulli rip_val)
+static void set_specific_register(std::string reg_name,
+                                debugger_status_t *global_stat, uintptr_t val)
 {
-    for (const auto& elem: global_stat.breakpoint_list)
-    {
-        if (elem == rip_val)
-            return 1;
-    }
-    return 0;
+    struct user_regs_struct registers = get_regs(global_stat);
+    int i = 0;
+    while(regs[i] != reg_name && i < 26)
+        ++i;
+    regs[i] = val;
+    ptrace(PTRACE_GETREGS, global_stat->pid, NULL, &registers);
 }
 
-static unsigned long resolve_addr(std::string value, debugger_status_t *global_stat)
+static uintptr_t resolve_addr(std::string value, debugger_status_t *global_stat)
 {
     if (value[0] == '0' && value[1] == 'x')
     {
-        return (unsigned long)strtol(value.c_str(), NULL, 0);
+        return (uintptr_t)strtol(value.c_str(), NULL, 0);
     }
     else
     {
@@ -82,38 +84,73 @@ void next_handler(std::string input, debugger_status_t *global_stat)
 
 void bp_handler(std::string input, debugger_status_t *global_stat)
 {
-    unsigned long addr = resolve_addr(
+    auto addr = resolve_addr(
                     std::string(input.begin() + 2, input.end()), global_stat);
-    global_stat->breakpoint_list.push_back(addr);
     void* addr_bp = (int*)addr;
     long ret;
-    uint8_t c = 0xcc;
-    printf("%x\n", addr);
-    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, &c);
+    uint32_t int3 = 0xcc000000;
+    uint32_t oldbyte;
+    ret = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, &oldbyte);
     if (ret < 0)
         printf("ERROR peektext\n");
-    else
-        printf("%ld\n", ret);
-}
 
+    printf("%x\n", addr);
+    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, &int3);
+    if (ret < 0)
+        printf("ERROR poketext\n");
+    breakpoint_t bp = {addr, oldbyte};
+    global_stat->breakpoint_list.push_back(bp);
+}
 
 void continue_handler(std::string input, debugger_status_t *global_stat)
 {
     (void)input;
     int status;
     global_stat->status = CONTINUE;
-    do {
-        int res = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
-        if (res < 0)
-            printf("ERROR\n");
-        waitpid(global_stat->pid, &status, 0);
-        ulli rip_val = get_specific_register("rip\0", global_stat);
-        if (need_break(*global_stat, rip_val))
+    long ret = ptrace(PTRACE_CONT, global_stat->pid, NULL, NULL);
+    if (ret < 0)
+        printf("ERROR PTRACE_CONT\n");
+
+    waitpid(global_stat->pid, &status, 0);
+    uintptr_t rip_val = get_specific_register("rip\0", global_stat);
+    std::cout << "addr stopped 0x" << std::hex << rip_val << std::endl;
+    breakpoint_t current_bp = {0, 0};
+    for (const auto& bp: global_stat->breakpoint_list)
+    {
+        std::cout << "0x" << std::hex << rip_val << std::endl;
+        std::cout << "0x" << std::hex << bp.addr << std::endl;
+        if (bp.addr == rip_val)
         {
-            printf("Stopped by Breakpoint\n");
-            break;
+            std::cout << "true" << std::endl;
+            current_bp = bp;
         }
-    } while(WEXITSTATUS(status));
+    }
+    if (current_bp.addr == 0)
+    {
+        std::cout << "perdosh" << std::endl;
+        return;
+    }
+    else
+        std::cout << "toto" << std::endl;
+
+    ret = ptrace(PTRACE_POKETEXT, global_stat->pid,
+                 current_bp.addr, &current_bp.old_byte);
+    if (ret < 0)
+        printf("ERROR POKETEXT\n");
+     
+    set_specific_register("rip", global_stat, rip_val - 1);
+
+    ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
+    if (ret < 0)
+        printf("ERROR SINGLESTEP\n");
+
+    waitpid(global_stat->pid, &status, 0);
+    uint32_t int3 = 0xcc000000;
+    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, &int3);
+    if (ret < 0)
+        perror("ERROR poketext");
+
     if (!WEXITSTATUS(status))
         printf("Programm stopped\n");
+
 }

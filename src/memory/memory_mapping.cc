@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <filesystem>
 
 static mem_mapping_t fill(std::string line, std::string exec_name)
 {
@@ -18,18 +19,16 @@ static mem_mapping_t fill(std::string line, std::string exec_name)
     char flags[4];
     sscanf(line.c_str(), "%lx-%lx %4c %x %x:%x %lu ", &from, &to, flags, &pgoff, &major,
             &minor, &ino);
-    auto subs = exec_name.find("//");
-    if (subs != std::string::npos)//remove first part if multiple //
-    {
-        exec_name = exec_name.substr(subs);
-        exec_name = std::string(exec_name.begin() + 1, exec_name.end());
-    }
     auto get_name = line.find("/");
     if (get_name != std::string::npos)
     {
         line = line.substr(get_name);
     }
-    if (line == exec_name)
+    std::filesystem::path file_map(line);
+    std::filesystem::path exec_path(line);
+    auto tamere = std::filesystem::canonical(file_map);
+    auto tonpere = std::filesystem::canonical(exec_name);
+    if (tamere == tonpere)
     {
         res.beg_addr = from;
         res.end_addr = to;
