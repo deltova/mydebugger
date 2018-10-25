@@ -28,6 +28,12 @@ static uintptr_t get_specific_register(std::string reg_name,
     return *(uintptr_t*)(((char*)&registers + sizeof(ulli) * i));
 }
 
+static void print_rip(debugger_status_t* global_stat)
+{
+    auto rip_val = get_specific_register("rip\0", global_stat);
+    std::cout << "rip after handling bp" << std::hex << rip_val << std::endl;
+}
+
 static void set_specific_register(std::string reg_name,
                                 debugger_status_t *global_stat, uintptr_t val)
 {
@@ -35,8 +41,10 @@ static void set_specific_register(std::string reg_name,
     int i = 0;
     while(regs[i] != reg_name && i < 26)
         ++i;
-    regs[i] = val;
-    ptrace(PTRACE_GETREGS, global_stat->pid, NULL, &registers);
+    *(uintptr_t*)((char*)&registers + sizeof(ulli) * i) = val;
+    std::cout << "tamere " << val << std::endl;
+    if (ptrace(PTRACE_SETREGS, global_stat->pid, NULL, &registers) < 0)
+        std::cerr << "error seting reg " << reg_name << std::endl;
 }
 
 static uintptr_t resolve_addr(std::string value, debugger_status_t *global_stat)
@@ -118,8 +126,8 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
         printf("ERROR PTRACE_CONT\n");
 
     waitpid(global_stat->pid, &status, 0);
-    uintptr_t rip_val = get_specific_register("rip\0", global_stat);
-    std::cout << "addr stopped 0x" << std::hex << rip_val << std::endl;
+    print_rip(global_stat);
+    auto rip_val = get_specific_register("rip", global_stat);
     breakpoint_t current_bp = {0, 0};
     for (const auto& bp: global_stat->breakpoint_list)
     {
@@ -143,6 +151,7 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
 
     //reset the rip above this instruction
     set_specific_register("rip", global_stat, rip_val - 1);
+    print_rip(global_stat);
 
     //execute this instruction
     ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
@@ -159,4 +168,5 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
 
     if (!WEXITSTATUS(status))
         printf("Programm stopped\n");
+
 }
