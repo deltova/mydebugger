@@ -88,18 +88,24 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
                     std::string(input.begin() + 2, input.end()), global_stat);
     void* addr_bp = (int*)addr;
     long ret;
-    uint32_t int3 = 0xcc000000;
-    uint32_t oldbyte;
-    ret = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, &oldbyte);
-    if (ret < 0)
-        printf("ERROR peektext\n");
+    long int3 = 0xcc;
+    long oldbyte;
+    oldbyte = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
+    if (oldbyte < 0)
+        std::cerr << "ERROR peektext" << std::endl;
 
     printf("%x\n", addr);
-    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, &int3);
+    int3 |= oldbyte & 0xFFFFFF00;
+    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
     if (ret < 0)
-        printf("ERROR poketext\n");
+        std::cerr << "ERROR poketext" << std::endl;
     breakpoint_t bp = {addr, oldbyte};
     global_stat->breakpoint_list.push_back(bp);
+    long debug;
+    debug = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
+    if (debug < 0)
+        std::cout << "ERROR poketext" << std::endl;
+    std::cout << "new memory: " << std::hex << debug << std::endl;
 }
 
 void continue_handler(std::string input, debugger_status_t *global_stat)
@@ -117,40 +123,40 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     breakpoint_t current_bp = {0, 0};
     for (const auto& bp: global_stat->breakpoint_list)
     {
-        std::cout << "0x" << std::hex << rip_val << std::endl;
-        std::cout << "0x" << std::hex << bp.addr << std::endl;
-        if (bp.addr == rip_val)
+        std::cout << "bp 0x" << std::hex << bp.addr << std::endl;
+        if (bp.addr + 1 == rip_val)
         {
-            std::cout << "true" << std::endl;
             current_bp = bp;
         }
     }
     if (current_bp.addr == 0)
     {
-        std::cout << "perdosh" << std::endl;
+        std::cout << "did not stop on a breakpoint" << std::endl;
         return;
     }
-    else
-        std::cout << "toto" << std::endl;
 
+    //reset the instruction that was their before the int3
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid,
                  current_bp.addr, &current_bp.old_byte);
     if (ret < 0)
         printf("ERROR POKETEXT\n");
-     
+
+    //reset the rip above this instruction
     set_specific_register("rip", global_stat, rip_val - 1);
 
+    //execute this instruction
     ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
     if (ret < 0)
         printf("ERROR SINGLESTEP\n");
-
     waitpid(global_stat->pid, &status, 0);
-    uint32_t int3 = 0xcc000000;
+
+    // put the int3 back
+    uint32_t int3 = 0x000000cc;
+    int3 |= current_bp.old_byte & 0xFFFFFF00;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, &int3);
     if (ret < 0)
         perror("ERROR poketext");
 
     if (!WEXITSTATUS(status))
         printf("Programm stopped\n");
-
 }
