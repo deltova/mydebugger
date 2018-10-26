@@ -25,11 +25,11 @@ static void init(int pid)
 static int exec_and_trace(int argc, char **argv)
 {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+
     if (argc == 2)
-        execvp(argv[1], nullptr);
+        return execvp(argv[1], nullptr);
     else
-        execvp(argv[1], argv + 2);
-    return 0;
+        return execvp(argv[1], argv + 2);
 }
 
 int main(int argc, char **argv)
@@ -39,10 +39,16 @@ int main(int argc, char **argv)
         fprintf(stderr, "too few args");
         return 1;
     }
+
     int pid;
+
     if (!(pid = fork()))
     {
-        exec_and_trace(argc, argv);
+        if (exec_and_trace(argc, argv) == -1)
+        {
+            perror("Could not exec the program");
+            return 1;
+        }
     }
     else
     {
@@ -50,6 +56,9 @@ int main(int argc, char **argv)
         int status;
         if (waitpid(pid, &status, 0))
         {
+            if (WIFEXITED(status))
+                return 1;
+
             init(pid);
             info = dump_mem(pid, argv[1]);
         }
