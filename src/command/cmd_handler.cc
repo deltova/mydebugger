@@ -40,6 +40,7 @@ void help_handler(std::string input, debugger_status_t *global_stat)
     printf("\th: print the helper of commands\n");
     printf("\tn: Go to next instruction\n");
     printf("\tp $register: print the value of the $register\n");
+    printf("\tp 0xaddr: print the content at $addr\n");
 }
 
 
