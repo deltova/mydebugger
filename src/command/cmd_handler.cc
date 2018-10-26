@@ -4,6 +4,9 @@
 #include <string>
 #include <iostream>
 
+#define MASK_INT3 0x000000cc
+#define MASK_OLD 0xFFFFFFFF00 
+
 typedef unsigned long long int ulli;
 
 static std::vector<std::string> regs = {"r15", "r14", "r13", "r12", "rbp", "rbx",
@@ -109,7 +112,7 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
         std::cerr << "ERROR peektext" << std::endl;
 
     printf("%x\n", addr);
-    int3 |= oldbyte & 0xFFFFFFFF00;
+    int3 |= oldbyte & MASK_OLD;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
     if (ret < 0)
         std::cerr << "ERROR poketext" << std::endl;
@@ -177,8 +180,8 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     waitpid(global_stat->pid, &status, 0);
 
     // put the int3 back
-    long int3 = 0x000000cc;
-    int3 |= current_bp.old_byte & 0xFFFFFFFF00;
+    long int3 = MASK_INT3;
+    int3 |= current_bp.old_byte & MASK_OLD;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, (void*)int3);
     if (ret < 0)
         perror("ERROR poketext");
