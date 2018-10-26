@@ -8,3 +8,5 @@ uintptr_t get_specific_register(std::string reg_name,
 
 void set_specific_register(std::string reg_name,
                                 debugger_status_t *global_stat, uintptr_t val);
+
+void print_rip(debugger_status_t* global_stat);

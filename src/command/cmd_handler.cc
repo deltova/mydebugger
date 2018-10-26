@@ -15,12 +15,6 @@ static void print_byte_code(std::vector<char> vect)
     std::cout << std::endl;
 }
 
-static void print_rip(debugger_status_t* global_stat)
-{
-    auto rip_val = get_specific_register("rip\0", global_stat);
-    std::cout << "rip after handling bp" << std::hex << rip_val << std::endl;
-}
-
 static uintptr_t resolve_addr(std::string value, debugger_status_t *global_stat)
 {
     if (value[0] == '0' && value[1] == 'x')
@@ -59,7 +53,8 @@ void print_reg_handler(std::string input, debugger_status_t *global_stat)
 void next_handler(std::string input, debugger_status_t *global_stat)
 {
     (void)input;
-    ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
+    if (ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL) < 0)
+        perror("ERROR singlestepping");
     int status;
     waitpid(global_stat->pid, &status, 0);
 }
@@ -74,19 +69,19 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
     long oldbyte;
     oldbyte = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
     if (oldbyte < 0)
-        std::cerr << "ERROR peektext" << std::endl;
+        perror("ERROR peektext");
 
     printf("%x\n", addr);
     int3 |= oldbyte & MASK_OLD;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
     if (ret < 0)
-        std::cerr << "ERROR poketext" << std::endl;
+        perror("ERROR poketext");
     breakpoint_t bp = {addr, oldbyte};
     global_stat->breakpoint_list.push_back(bp);
     long debug;
     debug = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
     if (debug < 0)
-        std::cout << "ERROR poketext" << std::endl;
+        perror("ERROR poketext");
 }
 
 
@@ -110,8 +105,7 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     global_stat->status = CONTINUE;
     long ret = ptrace(PTRACE_CONT, global_stat->pid, NULL, NULL);
     if (ret < 0)
-        printf("ERROR PTRACE_CONT\n");
-
+        perror("ERROR PTRACE_CONT\n");
     waitpid(global_stat->pid, &status, 0);
     print_rip(global_stat);
     auto rip_val = get_specific_register("rip", global_stat);
@@ -133,7 +127,7 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid,
                  current_bp.addr, (void*)current_bp.old_byte);
     if (ret < 0)
-        printf("ERROR POKETEXT\n");
+        perror("ERROR POKETEXT\n");
 
     //reset the rip above this instruction
     set_specific_register("rip", global_stat, rip_val - 1);
@@ -141,7 +135,7 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     //execute this instruction
     ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
     if (ret < 0)
-        printf("ERROR SINGLESTEP\n");
+        perror("ERROR SINGLESTEP\n");
     waitpid(global_stat->pid, &status, 0);
 
     // put the int3 back

@@ -1,6 +1,7 @@
 #include "register.h"
 #include <err.h>
 #include <vector>
+#include <iostream>
 
 static std::vector<std::string> regs = {"r15", "r14", "r13", "r12", "rbp", "rbx",
 "r11", "r10", "r9", "r8", "rax", "rcx", "rdx", "rsi", "rdi",
@@ -34,4 +35,10 @@ void set_specific_register(std::string reg_name,
     *(uintptr_t*)((char*)&registers + sizeof(ulli) * i) = val;
     if (ptrace(PTRACE_SETREGS, global_stat->pid, NULL, &registers) < 0)
         perror("error seting reg");
+}
+
+void print_rip(debugger_status_t* global_stat)
+{
+    auto rip_val = get_specific_register("rip\0", global_stat);
+    std::cout << "rip after handling bp" << std::hex << rip_val << std::endl;
 }
