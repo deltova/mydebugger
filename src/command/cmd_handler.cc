@@ -6,7 +6,7 @@
 #include <iostream>
 
 #define MASK_INT3 0x000000cc
-#define MASK_OLD 0xFFFFFFFFFFFFFF00
+#define MASK_OLD 0xFFFFFFFFFFFFFFFF00
 
 static void print_byte_code(std::vector<char> vect)
 {
@@ -85,11 +85,6 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
     std::cout << std::hex << addr << std::endl;
     int3 |= oldbyte & MASK_OLD;
 
-    auto main_addr = global_stat->mapping.beg_addr +
-                     addr_from_name(global_stat->program_name, "main");
-    auto vect = get_memory<10>(main_addr, global_stat);
-    print_byte_code(vect);
-
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
     if (ret == -1)
         perror("ERROR poketext");
@@ -146,10 +141,6 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     if (ret == -1)
         perror("ERROR POKETEXT\n");
 
-    auto main_addr =  global_stat->mapping.beg_addr + addr_from_name(global_stat->program_name, "main");
-    auto vect = get_memory<10>(main_addr, global_stat);
-    print_byte_code(vect);
-
     //reset the rip above this instruction
     set_specific_register("rip", global_stat, rip_val - 1);
 
@@ -162,10 +153,6 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, (void*)int3);
     if (ret == -1)
         perror("ERROR poketext");
-
-    vect = get_memory<10>(main_addr, global_stat);
-    print_byte_code(vect);
-
 
     if (!WEXITSTATUS(status))
         printf("Programm stopped\n");
