@@ -21,6 +21,7 @@ static std::map<std::string, handler> input_handlers{
     {"c", continue_handler},
     {"h", help_handler},
     {"s", step_handler},
+    {"p", print_handler}
 };
 
 void change_mode(debugger_status_t*, status_e);

@@ -43,11 +43,21 @@ void help_handler(std::string input, debugger_status_t *global_stat)
 }
 
 
-void print_reg_handler(std::string input, debugger_status_t *global_stat)
+void print_handler(std::string input, debugger_status_t *global_stat)
 {
-    ulli reg_val = get_specific_register(
-                   std::string(input.begin() + 2, input.end()), global_stat);
-    printf("%lld\n", reg_val);
+    auto command  = std::string(input.begin() + 2, input.end());
+    if (command.size() > 2 && command[0] == '0' && command[1] == 'x')
+    {
+        uintptr_t addr = std::stoul(command, NULL, 16);
+        auto vect = get_memory<10>(addr, global_stat);
+        print_byte_code(vect);
+    }
+    else
+    {
+        std::cout << "0x";
+        std::cout << std::hex << get_specific_register(command, global_stat)
+            << std::endl;
+    }
 }
 
 void next_handler(std::string input, debugger_status_t *global_stat)
@@ -71,7 +81,7 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
     if (oldbyte < 0)
         perror("ERROR peektext");
 
-    printf("%x\n", addr);
+    std::cout << std::hex << addr << std::endl;
     int3 |= oldbyte & MASK_OLD;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
     if (ret < 0)
