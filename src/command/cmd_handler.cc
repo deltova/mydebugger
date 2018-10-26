@@ -6,7 +6,7 @@
 #include <iostream>
 
 #define MASK_INT3 0x000000cc
-#define MASK_OLD 0xFFFFFFFF00
+#define MASK_OLD 0xFFFFFFFFFFFFFF00
 
 static void print_byte_code(std::vector<char> vect)
 {
@@ -79,19 +79,25 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
     long int3 = 0xcc;
     long oldbyte;
     oldbyte = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
-    if (oldbyte < 0)
+    if (oldbyte == -1)
         perror("ERROR peektext");
 
     std::cout << std::hex << addr << std::endl;
     int3 |= oldbyte & MASK_OLD;
+
+    auto main_addr = global_stat->mapping.beg_addr +
+                     addr_from_name(global_stat->program_name, "main");
+    auto vect = get_memory<10>(main_addr, global_stat);
+    print_byte_code(vect);
+
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
-    if (ret < 0)
+    if (ret == -1)
         perror("ERROR poketext");
     breakpoint_t bp = {addr, oldbyte};
     global_stat->breakpoint_list.push_back(bp);
     long debug;
     debug = ptrace(PTRACE_PEEKTEXT, global_stat->pid, addr_bp, NULL);
-    if (debug < 0)
+    if (debug == -1)
         perror("ERROR poketext");
 }
 
@@ -101,7 +107,7 @@ void step_handler(std::string input, debugger_status_t *global_stat)
     (void)input;
     int status;
     long ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
-    if (ret < 0)
+    if (ret == -1)
         printf("ERROR SINGLESTEP\n");
     waitpid(global_stat->pid, &status, 0);
     print_rip(global_stat);
@@ -115,7 +121,7 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     int status;
     global_stat->status = CONTINUE;
     long ret = ptrace(PTRACE_CONT, global_stat->pid, NULL, NULL);
-    if (ret < 0)
+    if (ret == -1)
         perror("ERROR PTRACE_CONT\n");
     waitpid(global_stat->pid, &status, 0);
     print_rip(global_stat);
@@ -137,24 +143,28 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
     //reset the instruction that was their before the int3
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid,
                  current_bp.addr, (void*)current_bp.old_byte);
-    if (ret < 0)
+    if (ret == -1)
         perror("ERROR POKETEXT\n");
+
+    auto main_addr =  global_stat->mapping.beg_addr + addr_from_name(global_stat->program_name, "main");
+    auto vect = get_memory<10>(main_addr, global_stat);
+    print_byte_code(vect);
 
     //reset the rip above this instruction
     set_specific_register("rip", global_stat, rip_val - 1);
 
     //execute this instruction
-    ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
-    if (ret < 0)
-        perror("ERROR SINGLESTEP\n");
-    waitpid(global_stat->pid, &status, 0);
+    step_handler(input, global_stat);
 
     // put the int3 back
     long int3 = MASK_INT3;
     int3 |= current_bp.old_byte & MASK_OLD;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, (void*)int3);
-    if (ret < 0)
+    if (ret == -1)
         perror("ERROR poketext");
+
+    vect = get_memory<10>(main_addr, global_stat);
+    print_byte_code(vect);
 
 
     if (!WEXITSTATUS(status))
