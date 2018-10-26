@@ -1,18 +1,12 @@
 #include "cmd_handler.h"
+#include "register.h"
 #include "info_elf.h"
 #include <sys/wait.h>
 #include <string>
 #include <iostream>
 
 #define MASK_INT3 0x000000cc
-#define MASK_OLD 0xFFFFFFFF00 
-
-typedef unsigned long long int ulli;
-
-static std::vector<std::string> regs = {"r15", "r14", "r13", "r12", "rbp", "rbx",
-"r11", "r10", "r9", "r8", "rax", "rcx", "rdx", "rsi", "rdi",
-"orig_rax", "rip", "cs", "eflags", "rsp", "ss", "fs_base",
-"gs_base", "ds", "es", "fs", "gs"};
+#define MASK_OLD 0xFFFFFFFF00
 
 static void print_byte_code(std::vector<char> vect)
 {
@@ -21,39 +15,10 @@ static void print_byte_code(std::vector<char> vect)
     std::cout << std::endl;
 }
 
-static struct user_regs_struct get_regs(debugger_status_t* global_stat)
-{
-    struct user_regs_struct regs;
-    ptrace(PTRACE_GETREGS, global_stat->pid, NULL, &regs);
-    return regs;
-}
-
-static uintptr_t get_specific_register(std::string reg_name,
-                                debugger_status_t *global_stat)
-{
-    struct user_regs_struct registers = get_regs(global_stat);
-    int i = 0;
-    while(regs[i] != reg_name && i < 26)
-        ++i;
-    return *(uintptr_t*)(((char*)&registers + sizeof(ulli) * i));
-}
-
 static void print_rip(debugger_status_t* global_stat)
 {
     auto rip_val = get_specific_register("rip\0", global_stat);
     std::cout << "rip after handling bp" << std::hex << rip_val << std::endl;
-}
-
-static void set_specific_register(std::string reg_name,
-                                debugger_status_t *global_stat, uintptr_t val)
-{
-    struct user_regs_struct registers = get_regs(global_stat);
-    int i = 0;
-    while(regs[i] != reg_name && i < 26)
-        ++i;
-    *(uintptr_t*)((char*)&registers + sizeof(ulli) * i) = val;
-    if (ptrace(PTRACE_SETREGS, global_stat->pid, NULL, &registers) < 0)
-        std::cerr << "error seting reg " << reg_name << std::endl;
 }
 
 static uintptr_t resolve_addr(std::string value, debugger_status_t *global_stat)

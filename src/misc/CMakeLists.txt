@@ -1,5 +1,5 @@
 add_library(${MYGDB}_misc STATIC
-    list.cc
+    register.cc
 )
 #add_dependencies(${TC_PROJECT}_ast ${TC_PROJECT}_parse)
 #target_compile_options(${MYGDB}_memory PRIVATE "-tadaronne")

@@ -3,6 +3,8 @@
 #include <string>
 #include "memory_mapping.h"
 
+typedef unsigned long long int ulli;
+
 typedef enum {
     CONTINUE,
     INPUT_WAIT,
