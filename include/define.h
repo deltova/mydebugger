@@ -10,7 +10,7 @@ typedef enum {
 
 typedef struct {
     uintptr_t addr;
-    uint32_t old_byte;
+    long old_byte;
 } breakpoint_t;
 
 typedef struct {

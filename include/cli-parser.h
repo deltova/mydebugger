@@ -34,7 +34,7 @@ static std::vector<handler> input_handlers{
     print_reg_handler,
     default_handler,
     default_handler,
-    default_handler,
+    step_handler,
     default_handler,
     default_handler,
     default_handler,

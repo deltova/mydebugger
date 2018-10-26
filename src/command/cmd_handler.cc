@@ -11,6 +11,13 @@ static std::vector<std::string> regs = {"r15", "r14", "r13", "r12", "rbp", "rbx"
 "orig_rax", "rip", "cs", "eflags", "rsp", "ss", "fs_base",
 "gs_base", "ds", "es", "fs", "gs"};
 
+static void print_byte_code(std::vector<char> vect)
+{
+    for (const auto& it: vect)
+        std::cout << std::hex << ((uint16_t)it & 0xFF) << " ";
+    std::cout << std::endl;
+}
+
 static struct user_regs_struct get_regs(debugger_status_t* global_stat)
 {
     struct user_regs_struct regs;
@@ -94,6 +101,9 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
 {
     auto addr = resolve_addr(
                     std::string(input.begin() + 2, input.end()), global_stat);
+    auto buffer= get_memory<20>(addr, global_stat);
+    std::cout << "new memory: 0x";
+    print_byte_code(buffer);
     void* addr_bp = (int*)addr;
     long ret;
     long int3 = 0xcc;
@@ -103,10 +113,13 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
         std::cerr << "ERROR peektext" << std::endl;
 
     printf("%x\n", addr);
-    int3 |= oldbyte & 0xFFFFFF00;
+    int3 |= oldbyte & 0xFFFFFFFF00;
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid, addr_bp, (void*)int3);
     if (ret < 0)
         std::cerr << "ERROR poketext" << std::endl;
+    buffer= get_memory<20>(addr, global_stat);
+    std::cout << "new memory: 0x";
+    print_byte_code(buffer);
     breakpoint_t bp = {addr, oldbyte};
     global_stat->breakpoint_list.push_back(bp);
     long debug;
@@ -114,6 +127,25 @@ void bp_handler(std::string input, debugger_status_t *global_stat)
     if (debug < 0)
         std::cout << "ERROR poketext" << std::endl;
     std::cout << "new memory: " << std::hex << debug << std::endl;
+}
+
+
+void step_handler(std::string input, debugger_status_t *global_stat)
+{
+    auto addr = resolve_addr("main", global_stat);
+    auto buffer= get_memory<20>(addr, global_stat);
+    std::cout << "new memory: 0x";
+    print_byte_code(buffer);
+    print_rip(global_stat);
+    (void)input;
+    int status;
+    long ret = ptrace(PTRACE_SINGLESTEP, global_stat->pid, NULL, NULL);
+    if (ret < 0)
+        printf("ERROR SINGLESTEP\n");
+    waitpid(global_stat->pid, &status, 0);
+    print_rip(global_stat);
+    if (!WEXITSTATUS(status))
+        printf("Programm stopped\n");
 }
 
 void continue_handler(std::string input, debugger_status_t *global_stat)
@@ -143,9 +175,13 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
         return;
     }
 
+    auto addr = resolve_addr("main", global_stat);
+    auto buffer= get_memory<20>(addr, global_stat);
+    std::cout << "1new memory: 0x";
+    print_byte_code(buffer);
     //reset the instruction that was their before the int3
     ret = ptrace(PTRACE_POKETEXT, global_stat->pid,
-                 current_bp.addr, &current_bp.old_byte);
+                 current_bp.addr, (void*)current_bp.old_byte);
     if (ret < 0)
         printf("ERROR POKETEXT\n");
 
@@ -159,14 +195,21 @@ void continue_handler(std::string input, debugger_status_t *global_stat)
         printf("ERROR SINGLESTEP\n");
     waitpid(global_stat->pid, &status, 0);
 
+    addr = resolve_addr("main", global_stat);
+    buffer= get_memory<20>(addr, global_stat);
+    std::cout << "2new memory: 0x";
+    print_byte_code(buffer);
     // put the int3 back
-    uint32_t int3 = 0x000000cc;
-    int3 |= current_bp.old_byte & 0xFFFFFF00;
-    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, &int3);
+    long int3 = 0x000000cc;
+    int3 |= current_bp.old_byte & 0xFFFFFFFF00;
+    ret = ptrace(PTRACE_POKETEXT, global_stat->pid, current_bp.addr, (void*)int3);
     if (ret < 0)
         perror("ERROR poketext");
 
+    buffer= get_memory<20>(addr, global_stat);
+    std::cout << "3new memory: 0x";
+    print_byte_code(buffer);
+
     if (!WEXITSTATUS(status))
         printf("Programm stopped\n");
-
 }
