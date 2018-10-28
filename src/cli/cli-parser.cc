@@ -1,11 +1,5 @@
 #include "cli-parser.h"
 
-
-void change_mode(debugger_status_t *global_stat, status_e new_status)
-{
-    global_stat->status = new_status;
-}
-
 void parse_and_update(debugger_status_t *global_stat, std::string input)
 {
     auto beg = input.begin();

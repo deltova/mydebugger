@@ -24,7 +24,6 @@ static std::map<std::string, handler> input_handlers{
     {"p", print_handler}
 };
 
-void change_mode(debugger_status_t*, status_e);
 void add_breakpoint(debugger_status_t*, unsigned long);
 void parse_and_update(debugger_status_t*, std::string);
 void print_register(debugger_status_t *, char *);

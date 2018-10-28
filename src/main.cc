@@ -15,13 +15,6 @@
 #include "define.h"
 #include "memory_mapping.h"
 
-static void init(int pid)
-{
-    struct user_regs_struct regs;
-    ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-    ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-}
-
 static int exec_and_trace(int argc, char **argv)
 {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
@@ -36,7 +29,7 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        fprintf(stderr, "too few args");
+        std::cerr <<  "too few args" << std::endl;
         return 1;
     }
 
@@ -59,7 +52,9 @@ int main(int argc, char **argv)
             if (WIFEXITED(status))
                 return 1;
 
-            init(pid);
+            struct user_regs_struct regs;
+            ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
             info = dump_mem(pid, argv[1]);
         }
         debugger_status_t global_status = {
