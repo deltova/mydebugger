@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <syscall.h>
 #include <stdint.h>
-#include "cli-parser.h"
 #include "define.h"
 #include "memory_mapping.h"
+#include "parser.h"
 
 static int exec_and_trace(int argc, char **argv)
 {
@@ -57,19 +57,8 @@ int main(int argc, char **argv)
             ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
             info = dump_mem(pid, argv[1]);
         }
-        debugger_status_t global_status = {
-            .status = INPUT_WAIT,
-            .pid = pid,
-            .mapping = info,
-            .program_name = argv[1]
-        };
-        for (;;)
-        {
-            std::string input;
-            std::cout << "mygdb> ";
-            std::getline(std::cin, input);
-            parse_and_update(&global_status, input);
-        }
+        Parser parser(Debugger(pid, argv[1], info));
+        parser.input_loop();
     }
     return 0;
 }

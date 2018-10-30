@@ -1,6 +1,6 @@
 #include "info_elf.h"
 
-unsigned long addr_from_name(char * filename, const char * symname)
+unsigned long addr_from_name(const char *filename,  const char *symname)
 {
     unsigned long symaddress = 0;
 
