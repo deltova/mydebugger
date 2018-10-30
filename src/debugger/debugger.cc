@@ -82,7 +82,7 @@ void Debugger::continue_handler(std::string input)
     if (ret == -1)
         perror("ERROR PTRACE_CONT\n");
     waitpid(_pid, &status, 0);
-    print_rip(_pid);
+    print_register(_pid, "rip");
     auto rip_val = get_specific_register("rip", _pid);
     breakpoint_t current_bp = {0, 0};
     for (const auto& bp: _breakpoints)
@@ -146,7 +146,7 @@ void Debugger::step_handler(std::string input)
     if (ret == -1)
         printf("ERROR SINGLESTEP\n");
     waitpid(_pid, &status, 0);
-    print_rip(_pid);
+    print_register(_pid, std::string("rip"));
     if (!WEXITSTATUS(status))
         printf("Programm stopped\n");
 }
