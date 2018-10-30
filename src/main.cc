@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <syscall.h>
 #include <stdint.h>
-#include "define.h"
 #include "memory_mapping.h"
 #include "parser.h"
 

@@ -1,15 +1,21 @@
 #pragma once
+#include <vector>
+#include <cstdint>
 #include <sys/uio.h>
-#include "define.h"
 #include "memory_mapping.h"
+
+typedef struct {
+    uintptr_t addr;
+    long old_byte;
+} breakpoint_t;
 
 class Debugger: public MemoryMapping
 {
 public:
     Debugger(int pid, std::string program_name)
-        : _pid(pid),
-          _program_name(program_name),
-          MemoryMapping(pid, program_name)
+        : MemoryMapping(pid, program_name),
+          _pid(pid),
+          _program_name(program_name)
     {
     }
 

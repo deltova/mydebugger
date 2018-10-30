@@ -1,7 +1,10 @@
 #pragma once
-#include "define.h"
+#include <cstdint>
+#include <string>
 #include <sys/ptrace.h>
 #include <sys/user.h>
+
+typedef unsigned long long int ulli;
 
 uintptr_t get_specific_register(const std::string& reg_name, int pid);
 
