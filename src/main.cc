@@ -45,7 +45,6 @@ int main(int argc, char **argv)
     }
     else
     {
-        mem_mapping_t info = {.beg_addr = 0, .end_addr = 0};
         int status;
         if (waitpid(pid, &status, 0))
         {
@@ -55,9 +54,8 @@ int main(int argc, char **argv)
             struct user_regs_struct regs;
             ptrace(PTRACE_GETREGS, pid, NULL, &regs);
             ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-            info = dump_mem(pid, argv[1]);
         }
-        Parser parser(Debugger(pid, argv[1], info));
+        Parser parser(Debugger(pid, argv[1]));
         parser.input_loop();
     }
     return 0;

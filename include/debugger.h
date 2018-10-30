@@ -3,14 +3,15 @@
 #include "define.h"
 #include "memory_mapping.h"
 
-class Debugger
+class Debugger: public MemoryMapping
 {
 public:
-    Debugger(int pid, std::string program_name, mem_mapping_t mapping)
+    Debugger(int pid, std::string program_name)
         : _pid(pid),
           _program_name(program_name),
-          _mapping(mapping)
-    {}
+          MemoryMapping(pid, program_name)
+    {
+    }
 
     void bp_handler(std::string input);
     void continue_handler(std::string input);
@@ -18,11 +19,10 @@ public:
     void help_handler(std::string input);
     void print_handler(std::string input);
     void step_handler(std::string input);
-private:
+protected:
     uintptr_t resolve_addr(std::string value);
     int _pid;
     std::string _program_name;
-    mem_mapping_t _mapping;
     std::vector<breakpoint_t> _breakpoints;
     //status
 };

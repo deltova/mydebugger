@@ -19,7 +19,6 @@ typedef struct {
     std::vector<breakpoint_t> breakpoint_list;
     status_e status;
     int pid;
-    mem_mapping_t mapping;
     char *program_name;
 }   debugger_status_t;
 

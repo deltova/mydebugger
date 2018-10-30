@@ -26,7 +26,7 @@ uintptr_t Debugger::resolve_addr(std::string value)
     else
     {
         //add offset to the begining  of the programm in memory
-        return _mapping.beg_addr
+        return this->_begin_addr
             + addr_from_name(_program_name.c_str(), value.c_str());
     }
 
