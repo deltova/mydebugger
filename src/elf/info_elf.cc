@@ -1,6 +1,6 @@
 #include "info_elf.h"
 
-unsigned long addr_from_name(char * filename, const char * symname)
+unsigned long addr_from_name(const char *filename,  const std::string& symname)
 {
     unsigned long symaddress = 0;
 
@@ -13,14 +13,17 @@ unsigned long addr_from_name(char * filename, const char * symname)
     asymbol **symtab = reinterpret_cast<asymbol**>(malloc(size));
     long syms = bfd_canonicalize_symtab(ibfd, symtab);
 
-    for(auto i = 0; i < syms; i++) {
-        if(strcmp(symtab[i]->name, symname) == 0) {
+    for(auto i = 0; i < syms; i++)
+    {
+        if (symtab[i]->name == symname)
+        {
             symbol_info info;
             bfd_symbol_info(symtab[i], &info);
             symaddress = info.value;
         }
     }
 
+    free(symtab);
     bfd_close(ibfd);
     return symaddress;
 }

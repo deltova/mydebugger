@@ -3,42 +3,44 @@
 #include <vector>
 #include <iostream>
 
-static std::vector<std::string> regs = {"r15", "r14", "r13", "r12", "rbp", "rbx",
-"r11", "r10", "r9", "r8", "rax", "rcx", "rdx", "rsi", "rdi",
-"orig_rax", "rip", "cs", "eflags", "rsp", "ss", "fs_base",
-"gs_base", "ds", "es", "fs", "gs"};
+static std::vector<std::string> regs =
+{
+    "r15", "r14", "r13", "r12", "rbp", "rbx",
+    "r11", "r10", "r9", "r8", "rax", "rcx", "rdx",
+    "rsi", "rdi", "orig_rax", "rip", "cs", "eflags",
+    "rsp", "ss", "fs_base", "gs_base", "ds", "es",
+    "fs", "gs"
+};
 
-static struct user_regs_struct get_regs(debugger_status_t* global_stat)
+static struct user_regs_struct get_regs(int pid)
 {
     struct user_regs_struct regs;
-    ptrace(PTRACE_GETREGS, global_stat->pid, NULL, &regs);
+    ptrace(PTRACE_GETREGS, pid, NULL, &regs);
     return regs;
 }
 
-uintptr_t get_specific_register(std::string reg_name,
-                                debugger_status_t *global_stat)
+uintptr_t get_specific_register(const std::string& reg_name, int pid)
 {
-    struct user_regs_struct registers = get_regs(global_stat);
+    struct user_regs_struct registers = get_regs(pid);
     int i = 0;
     while(regs[i] != reg_name && i < 26)
         ++i;
     return *(uintptr_t*)(((char*)&registers + sizeof(ulli) * i));
 }
 
-void set_specific_register(std::string reg_name,
-                                debugger_status_t *global_stat, uintptr_t val)
+void set_specific_register(const std::string& reg_name, int pid, uintptr_t val)
 {
-    struct user_regs_struct registers = get_regs(global_stat);
+    struct user_regs_struct registers = get_regs(pid);
     int i = 0;
     while(regs[i] != reg_name && i < 26)
         ++i;
     *(uintptr_t*)((char*)&registers + sizeof(ulli) * i) = val;
-    if (ptrace(PTRACE_SETREGS, global_stat->pid, NULL, &registers) < 0)
+    if (ptrace(PTRACE_SETREGS, pid, NULL, &registers) < 0)
         perror("error seting reg");
 }
 
-void print_rip(debugger_status_t* global_stat)
+void print_register(int pid, const std::string& name)
 {
-    auto rip_val = get_specific_register("rip\0", global_stat);
+    auto rip_val = get_specific_register(name, pid);
     std::cout << "rip after handling bp" << std::hex << rip_val << std::endl;
 }

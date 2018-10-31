@@ -11,9 +11,8 @@
 #include <stdlib.h>
 #include <syscall.h>
 #include <stdint.h>
-#include "cli-parser.h"
-#include "define.h"
 #include "memory_mapping.h"
+#include "parser.h"
 
 static int exec_and_trace(int argc, char **argv)
 {
@@ -45,31 +44,13 @@ int main(int argc, char **argv)
     }
     else
     {
-        mem_mapping_t info = {.beg_addr = 0, .end_addr = 0};
         int status;
-        if (waitpid(pid, &status, 0))
-        {
-            if (WIFEXITED(status))
-                return 1;
-
-            struct user_regs_struct regs;
-            ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-            info = dump_mem(pid, argv[1]);
-        }
-        debugger_status_t global_status = {
-            .status = INPUT_WAIT,
-            .pid = pid,
-            .mapping = info,
-            .program_name = argv[1]
-        };
-        for (;;)
-        {
-            std::string input;
-            std::cout << "mygdb> ";
-            std::getline(std::cin, input);
-            parse_and_update(&global_status, input);
-        }
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status))
+            return 1;
+        ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
+        Parser parser(Debugger(pid, argv[1]));
+        parser.input_loop();
     }
     return 0;
 }

@@ -6,7 +6,7 @@
 #include "bfd.h"
 #include <unistd.h>
 #include <dlfcn.h>
-#include <string.h>
+#include <string>
 #include <stdlib.h>
 
-unsigned long addr_from_name(char * filename, const char* symname);
+unsigned long addr_from_name(const char * filename, const std::string& symname);
