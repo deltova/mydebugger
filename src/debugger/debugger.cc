@@ -29,7 +29,6 @@ uintptr_t Debugger::resolve_addr(std::string value)
         return this->_begin_addr
             + addr_from_name(_program_name.c_str(), value.c_str());
     }
-
 }
 
 void Debugger::help_handler(std::string input)
@@ -118,7 +117,7 @@ void Debugger::continue_handler(std::string input)
         perror("ERROR poketext");
 
     if (!WEXITSTATUS(status))
-        printf("Programm stopped\n");
+        std::cerr << "Programm stopped" << std::endl;
 }
 
 void Debugger::print_handler(std::string input)
@@ -144,9 +143,9 @@ void Debugger::step_handler(std::string input)
     int status;
     long ret = ptrace(PTRACE_SINGLESTEP, _pid, NULL, NULL);
     if (ret == -1)
-        printf("ERROR SINGLESTEP\n");
+        std::cerr << "ERROR SINGLESTEP\n" << std::endl;
     waitpid(_pid, &status, 0);
     print_register(_pid, std::string("rip"));
     if (!WEXITSTATUS(status))
-        printf("Programm stopped\n");
+        std::cerr << "Programm stopped\n" << std::endl;
 }

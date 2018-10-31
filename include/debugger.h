@@ -18,7 +18,6 @@ public:
           _program_name(program_name)
     {
     }
-
     void bp_handler(std::string input);
     void continue_handler(std::string input);
     void default_handler(std::string input);

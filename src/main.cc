@@ -45,15 +45,10 @@ int main(int argc, char **argv)
     else
     {
         int status;
-        if (waitpid(pid, &status, 0))
-        {
-            if (WIFEXITED(status))
-                return 1;
-
-            struct user_regs_struct regs;
-            ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-        }
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status))
+            return 1;
+        ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
         Parser parser(Debugger(pid, argv[1]));
         parser.input_loop();
     }

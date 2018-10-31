@@ -23,6 +23,7 @@ unsigned long addr_from_name(const char *filename,  const std::string& symname)
         }
     }
 
+    free(symtab);
     bfd_close(ibfd);
     return symaddress;
 }
