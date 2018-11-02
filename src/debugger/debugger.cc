@@ -1,11 +1,13 @@
 #include "debugger.h"
-#include "register.h"
 #include "info_elf.h"
+#include "register.h"
+#include <iostream>
+#include <iterator>
+#include <sstream>
+#include <stdio.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <stdio.h>
-#include <iostream>
 
 constexpr long long MASK_INT3 = 0x000000cc;
 constexpr long long MASK_OLD = 0xFFFFFFFFFFFFFFFF00;
@@ -15,6 +17,15 @@ static void print_byte_code(std::vector<char> vect)
     for (const auto& it: vect)
         std::cout << std::hex << ((uint16_t)it & 0xFF) << " ";
     std::cout << std::endl;
+}
+
+static std::vector<std::string> tokenize(std::string str)
+{
+    std::stringstream strstr(str);
+    std::istream_iterator<std::string> it(strstr);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string> results(it, end);
+    return results;
 }
 
 uintptr_t Debugger::resolve_addr(std::string value)
@@ -41,6 +52,20 @@ void Debugger::help_handler(std::string input)
     std::cout << "\ts: Go to next instruction" << std::endl;
     std::cout << "\tp $register: print the value of the $register" << std::endl;
     std::cout << "\tp 0xaddr: print the content at $addr" << std::endl;
+}
+
+void Debugger::disas_handler(std::string input)
+{
+    uintptr_t addr_disas = get_specific_register("rip", _pid);
+    auto data = get_memory<20>(addr_disas, _pid);
+    cs_insn *insn;
+    auto raw_data = reinterpret_cast<const unsigned char *>(data.data());
+    auto count = cs_disasm(capstone_handle, raw_data, sizeof(raw_data) - 1,
+            0x1000, 0, &insn);
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        std::cout << insn[i].mnemonic << " " << insn[i].op_str << std::endl;
+    }
 }
 
 void Debugger::default_handler(std::string input)

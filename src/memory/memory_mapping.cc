@@ -23,7 +23,7 @@ MemoryMapping::MemoryMapping(const int& pid, const std::string& exec_name)
     unsigned int pgoff, major, minor;
     unsigned long ino;
     sscanf(line.c_str(), "%lx-%lx %4c %x %x:%x %lu ", &from, &to,
-           flags, &pgoff, &major, &minor, &ino);    
+           flags, &pgoff, &major, &minor, &ino);
     _begin_addr = from;
     _end_addr = to;
 }

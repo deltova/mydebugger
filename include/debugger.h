@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
+#include <iostream>
 #include <cstdint>
 #include <sys/uio.h>
+#include <capstone/capstone.h>
 #include "memory_mapping.h"
 
 typedef struct {
@@ -17,9 +19,12 @@ public:
           _pid(pid),
           _program_name(program_name)
     {
+        if (cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle) != CS_ERR_OK)
+            std::cerr << "capstone opening failed" << std::endl;
     }
     void bp_handler(std::string input);
     void continue_handler(std::string input);
+    void disas_handler(std::string input);
     void default_handler(std::string input);
     void help_handler(std::string input);
     void print_handler(std::string input);
@@ -29,6 +34,7 @@ protected:
     int _pid;
     std::string _program_name;
     std::vector<breakpoint_t> _breakpoints;
+    csh capstone_handle;
     //status
 };
 
