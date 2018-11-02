@@ -56,7 +56,18 @@ void Debugger::help_handler(std::string input)
 
 void Debugger::disas_handler(std::string input)
 {
-    uintptr_t addr_disas = get_specific_register("rip", _pid);
+    auto tokens = tokenize(input);
+    uintptr_t addr_disas = 0;
+    if (tokens.size() >= 2)
+    {
+       auto is_hexa = std::string(tokens[1].begin(), tokens[1].begin() + 2);
+       if (is_hexa == std::string("0x"))
+       {
+           addr_disas = strtol(tokens[1].c_str(), NULL, 0);
+       }
+    }
+    if (addr_disas == 0)
+        addr_disas = get_specific_register("rip", _pid);
     auto data = get_memory<20>(addr_disas, _pid);
     cs_insn *insn;
     auto raw_data = reinterpret_cast<const unsigned char *>(data.data());
