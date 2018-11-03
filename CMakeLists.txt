@@ -8,6 +8,7 @@ ADD_EXECUTABLE(${MYGDB} src/main.cc)
 
 add_compile_options("-std=c++17" "-pedantic" "-Wall" "-Wextra")
 target_link_libraries(${MYGDB} PUBLIC bfd)
+target_link_libraries(${MYGDB} PUBLIC capstone)
 target_link_libraries(${MYGDB} PUBLIC readline)
 
 TARGET_INCLUDE_DIRECTORIES(${MYGDB} PUBLIC "include")
