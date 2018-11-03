@@ -36,12 +36,13 @@ Launch it:
 Access the helper:
 
 ```
-mygdb> h
 Available command:
         b $addr: set a breakpoint at $addr
         c: Continue to the next breakpoint
+        d: Disas from rip value
+        d $0xaddr: Disas from 0xaddr
         h: print the helper of commands
-        n: Go to next instruction
+        s: Go to next instruction
         p $register: print the value of the $register
         p 0xaddr: print the content at $addr
 ```

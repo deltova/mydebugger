@@ -20,7 +20,7 @@ typedef void (Debugger::*func_ptr)(std::string);
 
 static std::map<std::string, func_ptr> input_handlers{
     {"b", &Debugger::bp_handler},
-    //{"d", disas_handler},
+    {"d", &Debugger::disas_handler},
     {"c", &Debugger::continue_handler},
     {"h", &Debugger::help_handler},
     {"s", &Debugger::step_handler},
