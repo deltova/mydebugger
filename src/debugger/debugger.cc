@@ -37,6 +37,8 @@ void Debugger::help_handler(std::string input)
     std::cout << "Available command:" << std::endl;
     std::cout << "\tb $addr: set a breakpoint at $addr" << std::endl;
     std::cout << "\tc: Continue to the next breakpoint" << std::endl;
+    std::cout << "\td: Disas from rip value" << std::endl;
+    std::cout << "\td $0xaddr: Disas from 0xaddr" << std::endl;
     std::cout << "\th: print the helper of commands" << std::endl;
     std::cout << "\ts: Go to next instruction" << std::endl;
     std::cout << "\tp $register: print the value of the $register" << std::endl;
