@@ -10,7 +10,7 @@ To begin with this project you just could clone it from github.
 
 ### Prerequisites
 
-To make it work you need libbfd.
+To make it work you need libbfd and capstone.
 
 ### Installing
 
