@@ -5,6 +5,7 @@
 #include <sys/uio.h>
 #include <capstone/capstone.h>
 #include "memory_mapping.h"
+#include "info_elf.h"
 
 typedef struct {
     uintptr_t addr;

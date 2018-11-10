@@ -2,14 +2,17 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1.0)
 SET(PACKAGE_NAME "MYGDB")
 SET(MYGDB "mygdb")
 SET(INCLUDE_DIRS "include")
+set(CMAKE_CXX_STANDARD 17)
 PROJECT(${MYGDB} CXX)
 
 ADD_EXECUTABLE(${MYGDB} src/main.cc)
 
-add_compile_options("-std=c++17" "-pedantic" "-Wall" "-Wextra")
+add_compile_options("-std=c++1z" "-pedantic" "-Wall" "-Wextra")
 target_link_libraries(${MYGDB} PUBLIC bfd)
 target_link_libraries(${MYGDB} PUBLIC capstone)
 target_link_libraries(${MYGDB} PUBLIC readline)
+target_link_libraries(${MYGDB} PUBLIC dwarf++)
+target_link_libraries(${MYGDB} PUBLIC elf++)
 
 TARGET_INCLUDE_DIRECTORIES(${MYGDB} PUBLIC "include")
 

@@ -12,6 +12,7 @@
 #include <syscall.h>
 #include <stdint.h>
 #include "memory_mapping.h"
+#include "debugger-dwarf.h"
 #include "parser.h"
 
 static int exec_and_trace(int argc, char **argv)
@@ -49,8 +50,21 @@ int main(int argc, char **argv)
         if (WIFEXITED(status))
             return 1;
         ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-        Parser parser(Debugger(pid, argv[1]));
-        parser.input_loop();
+        
+        if (contains_debug_info(argv[1]))
+        {
+            DebuggerDwarf dbg(pid, argv[1]);
+            Parser parser(dbg);
+            std::cout << "Reading debug info" << std::endl;
+            auto res = dbg.find_source_file("main").value();
+            std::cout << "printer" << res.first << res.second << std::endl;
+            parser.input_loop();
+        }
+        else
+        {
+            Parser parser(Debugger(pid, argv[1]));
+            parser.input_loop();
+        }
     }
     return 0;
 }
