@@ -14,8 +14,8 @@ constexpr long long MASK_OLD = 0xFFFFFFFFFFFFFFFF00;
 
 static void print_byte_code(std::vector<char> vect)
 {
-    for (const auto& it: vect)
-        std::cout << std::hex << ((uint16_t)it & 0xFF) << " ";
+    for (const auto& it : vect)
+        std::cout << std::hex << ((uint16_t)it & 0xFF) << " " << std::dec;
     std::cout << std::endl;
 }
 
@@ -28,6 +28,19 @@ static std::vector<std::string> tokenize(std::string str)
     return results;
 }
 
+void Debugger::call_correct(const std::string& input)
+{
+    auto beg = input.begin();
+    auto handler_it = _input_handlers.find(std::string(beg, beg + 1));
+    if (handler_it == _input_handlers.end())
+        default_handler(input);
+    else
+    {
+        auto handler = handler_it->second;
+        ((*this).*handler)(input);
+    }
+}
+
 uintptr_t Debugger::resolve_addr(std::string value)
 {
     if (value[0] == '0' && value[1] == 'x')
@@ -36,9 +49,9 @@ uintptr_t Debugger::resolve_addr(std::string value)
     }
     else
     {
-        //add offset to the begining  of the programm in memory
-        return this->_begin_addr
-            + addr_from_name(_program_name.c_str(), value.c_str());
+        // add offset to the begining  of the programm in memory
+        return this->_begin_addr +
+               addr_from_name(_program_name.c_str(), value.c_str());
     }
 }
 
@@ -62,19 +75,19 @@ void Debugger::disas_handler(std::string input)
     uintptr_t addr_disas = 0;
     if (tokens.size() >= 2)
     {
-       auto is_hexa = std::string(tokens[1].begin(), tokens[1].begin() + 2);
-       if (is_hexa == std::string("0x"))
-       {
-           addr_disas = strtol(tokens[1].c_str(), NULL, 0);
-       }
+        auto is_hexa = std::string(tokens[1].begin(), tokens[1].begin() + 2);
+        if (is_hexa == std::string("0x"))
+        {
+            addr_disas = strtol(tokens[1].c_str(), NULL, 0);
+        }
     }
     if (addr_disas == 0)
         addr_disas = get_specific_register("rip", _pid);
     auto data = get_memory<20>(addr_disas, _pid);
-    cs_insn *insn;
-    auto raw_data = reinterpret_cast<const unsigned char *>(data.data());
+    cs_insn* insn;
+    auto raw_data = reinterpret_cast<const unsigned char*>(data.data());
     auto count = cs_disasm(capstone_handle, raw_data, sizeof(raw_data) - 1,
-            0x1000, 0, &insn);
+                           0x1000, 0, &insn);
     for (std::size_t i = 0; i < count; ++i)
     {
         std::cout << insn[i].mnemonic << " " << insn[i].op_str << std::endl;
@@ -97,7 +110,7 @@ void Debugger::bp_handler(std::string input)
     if (oldbyte == -1)
         perror("ERROR peektext");
 
-    std::cout << std::hex << addr << std::endl;
+    std::cout << std::hex << addr << std::dec << std::endl;
     int3 |= oldbyte & MASK_OLD;
 
     ret = ptrace(PTRACE_POKETEXT, _pid, addr_bp, (void*)int3);
@@ -122,7 +135,7 @@ void Debugger::continue_handler(std::string input)
     print_register(_pid, "rip");
     auto rip_val = get_specific_register("rip", _pid);
     breakpoint_t current_bp = {0, 0};
-    for (const auto& bp: _breakpoints)
+    for (const auto& bp : _breakpoints)
     {
         if (bp.addr + 1 == rip_val)
         {
@@ -135,16 +148,16 @@ void Debugger::continue_handler(std::string input)
         return;
     }
 
-    //reset the instruction that was their before the int3
-    ret = ptrace(PTRACE_POKETEXT, _pid,
-                 current_bp.addr, (void*)current_bp.old_byte);
+    // reset the instruction that was their before the int3
+    ret = ptrace(PTRACE_POKETEXT, _pid, current_bp.addr,
+                 (void*)current_bp.old_byte);
     if (ret == -1)
         perror("ERROR POKETEXT\n");
 
-    //reset the rip above this instruction
+    // reset the rip above this instruction
     set_specific_register("rip", _pid, rip_val - 1);
 
-    //execute this instruction
+    // execute this instruction
     this->step_handler(input);
 
     // put the int3 back
@@ -160,7 +173,7 @@ void Debugger::continue_handler(std::string input)
 
 void Debugger::print_handler(std::string input)
 {
-    auto command  = std::string(input.begin() + 2, input.end());
+    auto command = std::string(input.begin() + 2, input.end());
     if (command.size() > 2 && command[0] == '0' && command[1] == 'x')
     {
         uintptr_t addr = std::stoul(command, NULL, 16);
@@ -171,7 +184,7 @@ void Debugger::print_handler(std::string input)
     {
         std::cout << "0x";
         std::cout << std::hex << get_specific_register(command, _pid)
-            << std::endl;
+                  << std::dec << std::endl;
     }
 }
 

@@ -10,7 +10,10 @@ To begin with this project you just could clone it from github.
 
 ### Prerequisites
 
-To make it work you need libbfd and capstone.
+To make it work you need:
+- libbfd
+- capstone
+- elf++/dwarf++
 
 ### Installing
 
