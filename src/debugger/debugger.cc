@@ -67,6 +67,9 @@ void Debugger::help_handler(std::string input)
     std::cout << "\ts: Go to next instruction" << std::endl;
     std::cout << "\tp $register: print the value of the $register" << std::endl;
     std::cout << "\tp 0xaddr: print the content at $addr" << std::endl;
+    std::cout
+      << "\tl: get the source file and line of the current executed code"
+      << std::endl;
 }
 
 void Debugger::disas_handler(std::string input)
