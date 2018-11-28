@@ -31,6 +31,7 @@ class DebuggerDwarf : public Debugger
   protected:
     std::pair<std::string, size_t>
     get_file_name_and_line(const dwarf::die& die);
+    size_t find_line(const size_t index_cu, const uintptr_t pc);
     // status
     dwarf::dwarf _dw;
     struct CompileUnit

@@ -121,6 +121,22 @@ DebuggerDwarf::source_from_name(const std::string& symbol)
     return {};
 }
 
+size_t DebuggerDwarf::find_line(const size_t index_cu, const uintptr_t pc)
+{
+    const auto& cu = _dw.compilation_units()[index_cu];
+    const auto& lines = cu.get_line_table();
+    auto prev = lines.begin();
+    for (auto line = lines.begin(); line != lines.end(); line++)
+    {
+        if (pc == line->address)
+            return line->line;
+        else if (pc > prev->address && pc < line->address)
+            return prev->line;
+        prev = line;
+    }
+    return 0;
+}
+
 std::optional<std::pair<std::string, size_t>>
 DebuggerDwarf::source_from_pc(const uintptr_t& pc_val)
 {
@@ -146,7 +162,20 @@ DebuggerDwarf::source_from_pc(const uintptr_t& pc_val)
         auto res = search_tree(cus[i].root(), pc_val, 0, lambda);
 
         if (res != std::nullopt)
-            return get_file_name_and_line(res.value());
+        {
+            size_t compile_unit = 0;
+            for (auto& attr : res.value().attributes())
+            {
+                if (auto attribute = to_string(attr.first);
+                    attribute == "DW_AT_decl_file")
+                {
+                    compile_unit =
+                      1 - strtol(to_string(attr.second).c_str(), NULL, 0);
+                }
+            }
+            return std::make_pair(_source_files[i].filename,
+                                  find_line(i, pc_val));
+        }
     }
     return {};
 }
