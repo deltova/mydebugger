@@ -1,5 +1,6 @@
 #pragma once
 #include "debugger.h"
+#include "file_cacher.hh"
 #include "libelfin/dwarf/dwarf++.hh"
 #include "libelfin/elf/elf++.hh"
 #include <capstone/capstone.h>
@@ -49,4 +50,5 @@ class DebuggerDwarf : public Debugger
     std::vector<CompileUnit> _source_files;
     std::map<std::string, decltype(&DebuggerDwarf::get_current_code)>
       _input_handlers_dwarf;
+    FileCacher _cache;
 };
