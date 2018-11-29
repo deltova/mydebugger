@@ -1,28 +1,20 @@
 #pragma once
-#include <memory>
-#include <map>
 #include "debugger.h"
+#include <map>
+#include <memory>
 
+template <typename T>
 class Parser
 {
-public:
-    Parser(Debugger debugger)
+  public:
+    Parser(T debugger)
     {
-        _debugger = std::make_shared<Debugger>(debugger);
+        _debugger = std::make_shared<T>(debugger);
     }
     void input_loop(void);
-    void parse_input(const std::string &input);
-private:
-    std::shared_ptr<Debugger> _debugger;
+
+  private:
+    std::shared_ptr<T> _debugger;
 };
 
-typedef void (Debugger::*func_ptr)(std::string);
-
-static std::map<std::string, func_ptr> input_handlers{
-    {"b", &Debugger::bp_handler},
-    {"d", &Debugger::disas_handler},
-    {"c", &Debugger::continue_handler},
-    {"h", &Debugger::help_handler},
-    {"s", &Debugger::step_handler},
-    {"p", &Debugger::print_handler}
-};
+#include "parser.hxx"
