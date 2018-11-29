@@ -2,7 +2,7 @@
 #include <iostream>
 
 template <typename T>
-inline void Parser<T>::input_loop(void)
+inline void Parser<T>::input_loop()
 {
     for (;;)
     {

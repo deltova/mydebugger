@@ -5,15 +5,14 @@ static bool contains_pc(uintptr_t low, uintptr_t high, uintptr_t pc)
     return low <= pc && pc <= low + high;
 }
 
-void DebuggerDwarf::get_current_code(std::string input)
+void DebuggerDwarf::get_current_code(std::string input [[maybe_unused]])
 {
     auto current_pc = get_specific_register("rip", _pid) - this->_begin_addr;
     auto res = source_from_pc(current_pc);
     if (res != std::nullopt)
-        std::cout << _cache.get_line(res->first, res->second - 1) << std::endl;
+        std::cout << _cache.get_line(res->first, res->second - 1) << '\n';
     else
-        std::cout << "Their is no current source for the current code"
-                  << std::endl;
+        std::cout << "Their is no current source for the current code\n";
 }
 
 DebuggerDwarf::DebuggerDwarf(int pid, std::string program_name)
@@ -39,7 +38,7 @@ DebuggerDwarf::DebuggerDwarf(int pid, std::string program_name)
             else if (to_string(attr.first) == "DW_AT_high_pc")
                 high_pc = strtol(to_string(attr.second).c_str(), NULL, 0);
         }
-        filename = path + "/" + filename;
+        filename = path + '/' + filename;
         _source_files.push_back(CompileUnit(low_pc, high_pc, filename));
         _input_handlers_dwarf["l"] = &DebuggerDwarf::get_current_code;
     }
@@ -62,16 +61,13 @@ DebuggerDwarf::get_file_name_and_line(const dwarf::die& die)
 {
     size_t compile_unit;
     size_t line;
-    for (auto& attr : die.attributes())
+    for (const auto& attr : die.attributes())
     {
-        if (auto attribute = to_string(attr.first);
-            attribute == "DW_AT_decl_file")
-        {
+        const auto attribute = to_string(attr.first);
+        if (attribute == "DW_AT_decl_file")
             compile_unit = 1 - strtol(to_string(attr.second).c_str(), NULL, 0);
-        }
 
-        if (auto attribute = to_string(attr.first);
-            attribute == "DW_AT_decl_line")
+        else if (attribute == "DW_AT_decl_line")
             line = strtol(to_string(attr.second).c_str(), NULL, 0);
     }
     return std::make_pair(_source_files[compile_unit].filename, line);
@@ -84,15 +80,17 @@ search_tree(const dwarf::die& node, const T& symbol, int depth, L lambda)
     std::optional<dwarf::die> save = {};
     for (const auto& child : node)
     {
-        auto res = search_tree(child, symbol, depth + 1, lambda);
+        const auto res = search_tree(child, symbol, depth + 1, lambda);
         if (res != std::nullopt)
             save = res;
     }
     if (save == std::nullopt)
+    {
         if (lambda(node, symbol))
             return node;
         else
             return {};
+    }
     return save;
 }
 
@@ -142,9 +140,10 @@ DebuggerDwarf::source_from_pc(const uintptr_t& pc_val)
         uintptr_t high = 0;
         for (const auto& attr : node.attributes())
         {
-            if (to_string(attr.first) == "DW_AT_low_pc")
+            const auto attribute = to_string(attr.first);
+            if (attribute == "DW_AT_low_pc")
                 low = strtol(to_string(attr.second).c_str(), NULL, 0);
-            else if (to_string(attr.first) == "DW_AT_high_pc")
+            else if (attribute == "DW_AT_high_pc")
                 high = strtol(to_string(attr.second).c_str(), NULL, 0);
         }
         return contains_pc(low, high, pc);
@@ -159,20 +158,8 @@ DebuggerDwarf::source_from_pc(const uintptr_t& pc_val)
         auto res = search_tree(cus[i].root(), pc_val, 0, lambda);
 
         if (res != std::nullopt)
-        {
-            size_t compile_unit = 0;
-            for (auto& attr : res.value().attributes())
-            {
-                if (auto attribute = to_string(attr.first);
-                    attribute == "DW_AT_decl_file")
-                {
-                    compile_unit =
-                      1 - strtol(to_string(attr.second).c_str(), NULL, 0);
-                }
-            }
             return std::make_pair(_source_files[i].filename,
                                   find_line(i, pc_val));
-        }
     }
     return {};
 }

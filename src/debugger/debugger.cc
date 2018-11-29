@@ -10,13 +10,13 @@
 #include <sys/wait.h>
 
 constexpr long long MASK_INT3 = 0x000000cc;
-constexpr long long MASK_OLD = 0xFFFFFFFFFFFFFFFF00;
+constexpr long long MASK_OLD = 0xFFFFFFFFFFFFFF00;
 
-static void print_byte_code(std::vector<char> vect)
+static void print_byte_code(const std::vector<char>& vect)
 {
     for (const auto& it : vect)
-        std::cout << std::hex << ((uint16_t)it & 0xFF) << " " << std::dec;
-    std::cout << std::endl;
+        std::cout << std::hex << ((uint16_t)it & 0xFF) << ' ' << std::dec;
+    std::cout << '\n';
 }
 
 static std::vector<std::string> tokenize(std::string str)
@@ -44,32 +44,26 @@ void Debugger::call_correct(const std::string& input)
 uintptr_t Debugger::resolve_addr(std::string value)
 {
     if (value[0] == '0' && value[1] == 'x')
-    {
         return (uintptr_t)strtol(value.c_str(), NULL, 0);
-    }
     else
-    {
         // add offset to the begining  of the programm in memory
         return this->_begin_addr +
                addr_from_name(_program_name.c_str(), value.c_str());
-    }
 }
 
-void Debugger::help_handler(std::string input)
+void Debugger::help_handler(std::string input [[maybe_unused]])
 {
-    (void)input;
-    std::cout << "Available command:" << std::endl;
-    std::cout << "\tb $addr: set a breakpoint at $addr" << std::endl;
-    std::cout << "\tc: Continue to the next breakpoint" << std::endl;
-    std::cout << "\td: Disas from rip value" << std::endl;
-    std::cout << "\td $0xaddr: Disas from 0xaddr" << std::endl;
-    std::cout << "\th: print the helper of commands" << std::endl;
-    std::cout << "\ts: Go to next instruction" << std::endl;
-    std::cout << "\tp $register: print the value of the $register" << std::endl;
-    std::cout << "\tp 0xaddr: print the content at $addr" << std::endl;
-    std::cout
-      << "\tl: get the source file and line of the current executed code"
-      << std::endl;
+    std::cout << "Available command:\n"
+              << "\tb $addr: set a breakpoint at $addr\n"
+              << "\tc: Continue to the next breakpoint\n"
+              << "\td: Disas from rip value\n"
+              << "\td $0xaddr: Disas from 0xaddr\n"
+              << "\th: print the helper of commands\n"
+              << "\ts: Go to next instruction\n"
+              << "\tp $register: print the value of the $register\n"
+              << "\tp 0xaddr: print the content at $addr\n"
+              << "\tl: get the source file and line of the current executed"
+              << " code\n";
 }
 
 void Debugger::disas_handler(std::string input)
@@ -80,9 +74,7 @@ void Debugger::disas_handler(std::string input)
     {
         auto is_hexa = std::string(tokens[1].begin(), tokens[1].begin() + 2);
         if (is_hexa == std::string("0x"))
-        {
             addr_disas = strtol(tokens[1].c_str(), NULL, 0);
-        }
     }
     if (addr_disas == 0)
         addr_disas = get_specific_register("rip", _pid);
@@ -92,9 +84,7 @@ void Debugger::disas_handler(std::string input)
     auto count = cs_disasm(capstone_handle, raw_data, sizeof(raw_data) - 1,
                            0x1000, 0, &insn);
     for (std::size_t i = 0; i < count; ++i)
-    {
-        std::cout << insn[i].mnemonic << " " << insn[i].op_str << std::endl;
-    }
+        std::cout << insn[i].mnemonic << ' ' << insn[i].op_str << '\n';
 }
 
 void Debugger::default_handler(std::string input)
@@ -113,7 +103,7 @@ void Debugger::bp_handler(std::string input)
     if (oldbyte == -1)
         perror("ERROR peektext");
 
-    std::cout << std::hex << addr << std::dec << std::endl;
+    std::cout << std::hex << addr << std::dec << '\n';
     int3 |= oldbyte & MASK_OLD;
 
     ret = ptrace(PTRACE_POKETEXT, _pid, addr_bp, (void*)int3);
@@ -127,9 +117,8 @@ void Debugger::bp_handler(std::string input)
         perror("ERROR poketext");
 }
 
-void Debugger::continue_handler(std::string input)
+void Debugger::continue_handler(std::string input [[maybe_unused]])
 {
-    (void)input;
     int status;
     long ret = ptrace(PTRACE_CONT, _pid, NULL, NULL);
     if (ret == -1)
@@ -141,13 +130,11 @@ void Debugger::continue_handler(std::string input)
     for (const auto& bp : _breakpoints)
     {
         if (bp.addr + 1 == rip_val)
-        {
             current_bp = bp;
-        }
     }
     if (current_bp.addr == 0)
     {
-        std::cout << "did not stop on a breakpoint" << std::endl;
+        std::cout << "did not stop on a breakpoint\n";
         return;
     }
 
@@ -171,7 +158,7 @@ void Debugger::continue_handler(std::string input)
         perror("ERROR poketext");
 
     if (!WEXITSTATUS(status))
-        std::cerr << "Programm stopped" << std::endl;
+        std::cerr << "Programm stopped\n";
 }
 
 void Debugger::print_handler(std::string input)
@@ -184,22 +171,18 @@ void Debugger::print_handler(std::string input)
         print_byte_code(vect);
     }
     else
-    {
-        std::cout << "0x";
-        std::cout << std::hex << get_specific_register(command, _pid)
-                  << std::dec << std::endl;
-    }
+        std::cout << "0x" << std::hex << get_specific_register(command, _pid)
+                  << std::dec << '\n';
 }
 
-void Debugger::step_handler(std::string input)
+void Debugger::step_handler(std::string input [[maybe_unused]])
 {
-    (void)input;
     int status;
     long ret = ptrace(PTRACE_SINGLESTEP, _pid, NULL, NULL);
     if (ret == -1)
-        std::cerr << "ERROR SINGLESTEP\n" << std::endl;
+        std::cerr << "ERROR SINGLESTEP\n";
     waitpid(_pid, &status, 0);
     print_register(_pid, std::string("rip"));
     if (!WEXITSTATUS(status))
-        std::cerr << "Programm stopped\n" << std::endl;
+        std::cerr << "Programm stopped\n";
 }
