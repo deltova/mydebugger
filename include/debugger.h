@@ -36,7 +36,7 @@ class Debugger : public MemoryMapping
              {"p", &Debugger::print_handler}});
     }
     virtual void call_correct(const std::string& input);
-    virtual void get_current_code(std::string input)
+    virtual void get_current_code(std::string input [[maybe_unused]])
     {
         std::cout << "There is no debug info" << std::endl;
     }
