@@ -57,7 +57,6 @@ int main(int argc, char** argv)
             Parser<DebuggerDwarf> parser(dbg);
             std::cout << "Reading debug info" << std::endl;
             auto res = dbg.source_from_name("main").value();
-            std::cout << "printer" << res.first << res.second << std::endl;
             parser.input_loop();
         }
         else

@@ -38,6 +38,6 @@ void set_specific_register(const std::string& reg_name, int pid, uintptr_t val)
 void print_register(int pid, const std::string& name)
 {
     auto rip_val = get_specific_register(name, pid);
-    std::cout << "rip after handling bp" << std::hex << rip_val << std::dec
+    std::cout << "rip after handling bp: 0x" << std::hex << rip_val << std::dec
               << std::endl;
 }

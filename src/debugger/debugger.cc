@@ -67,9 +67,8 @@ void Debugger::help_handler(std::string input)
     std::cout << "\ts: Go to next instruction" << std::endl;
     std::cout << "\tp $register: print the value of the $register" << std::endl;
     std::cout << "\tp 0xaddr: print the content at $addr" << std::endl;
-    std::cout
-      << "\tl: get the source file and line of the current executed code"
-      << std::endl;
+    std::cout << "\tl: print the source code of the current executed code"
+              << std::endl;
 }
 
 void Debugger::disas_handler(std::string input)
@@ -135,7 +134,6 @@ void Debugger::continue_handler(std::string input)
     if (ret == -1)
         perror("ERROR PTRACE_CONT\n");
     waitpid(_pid, &status, 0);
-    print_register(_pid, "rip");
     auto rip_val = get_specific_register("rip", _pid);
     breakpoint_t current_bp = {0, 0};
     for (const auto& bp : _breakpoints)
