@@ -1,5 +1,6 @@
 #include "parser.h"
 #include <iostream>
+#include <stdlib.h>
 
 template <typename T>
 inline void Parser<T>::input_loop(void)
@@ -8,7 +9,11 @@ inline void Parser<T>::input_loop(void)
     {
         std::string input;
         std::cout << "mygdb> ";
-        std::getline(std::cin, input);
+        if (!std::getline(std::cin, input))
+        {
+            std::cout << std::endl;
+            exit(0);
+        }
         this->_debugger->call_correct(input);
     }
 }
