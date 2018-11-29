@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 {
     if (argc < 2)
     {
-        std::cerr << "too few args" << std::endl;
+        std::cerr << "too few args\n";
         return 1;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
         {
             DebuggerDwarf dbg(pid, argv[1]);
             Parser<DebuggerDwarf> parser(dbg);
-            std::cout << "Reading debug info" << std::endl;
+            std::cout << "Reading debug info\n";
             auto res = dbg.source_from_name("main").value();
             parser.input_loop();
         }
