@@ -10,7 +10,10 @@ To begin with this project you just could clone it from github.
 
 ### Prerequisites
 
-To make it work you need libbfd.
+To make it work you need:
+- libbfd
+- capstone
+- elf++/dwarf++
 
 ### Installing
 
@@ -45,6 +48,8 @@ Available command:
         s: Go to next instruction
         p $register: print the value of the $register
         p 0xaddr: print the content at $addr
+        l: get the source file and line of the current executed code
+
 ```
 
 ## Authors

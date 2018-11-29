@@ -27,3 +27,12 @@ unsigned long addr_from_name(const char *filename,  const std::string& symname)
     bfd_close(ibfd);
     return symaddress;
 }
+
+bool contains_debug_info(const char* filename)
+{
+    bfd_init();
+
+    bfd *ibfd = bfd_openr(filename, NULL);
+    bfd_check_format(ibfd, bfd_object);
+    return bfd_get_section_by_name(ibfd, ".debug_info") != NULL;
+}
