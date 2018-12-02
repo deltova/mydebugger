@@ -62,7 +62,7 @@ void Debugger::help_handler(std::string input [[maybe_unused]])
               << "\ts: Go to next instruction\n"
               << "\tp $register: print the value of the $register\n"
               << "\tp 0xaddr: print the content at $addr\n"
-              << "\tl: get the source file and line of the current executed"
+              << "\tl [n]: get [n]  line of the current source"
               << " code\n";
 }
 
@@ -124,7 +124,6 @@ void Debugger::continue_handler(std::string input [[maybe_unused]])
     if (ret == -1)
         perror("ERROR PTRACE_CONT\n");
     waitpid(_pid, &status, 0);
-    print_register(_pid, "rip");
     auto rip_val = get_specific_register("rip", _pid);
     breakpoint_t current_bp = {0, 0};
     for (const auto& bp : _breakpoints)
@@ -163,6 +162,10 @@ void Debugger::continue_handler(std::string input [[maybe_unused]])
 
 void Debugger::print_handler(std::string input)
 {
+    if (input.size() < 2)
+    {
+        std::cout << "print takes an arguement\n";
+    }
     auto command = std::string(input.begin() + 2, input.end());
     if (command.size() > 2 && command[0] == '0' && command[1] == 'x')
     {
