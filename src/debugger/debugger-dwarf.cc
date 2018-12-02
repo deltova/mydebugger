@@ -109,8 +109,6 @@ search_tree(const dwarf::die& node, const T& symbol, int depth, L lambda)
             return node;
         else
             return {};
-<<<<<<< HEAD
-=======
     }
     return save;
 }
@@ -133,7 +131,6 @@ DebuggerDwarf::source_from_name(const std::string& symbol)
         auto res = search_tree(cu.root(), symbol, 0, lambda);
         if (res != std::nullopt)
             return get_file_name_and_line(res.value());
->>>>>>> cleanup: clean code and fix warnings
     }
     return save;
 }
