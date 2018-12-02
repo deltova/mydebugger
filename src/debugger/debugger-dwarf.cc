@@ -113,28 +113,6 @@ search_tree(const dwarf::die& node, const T& symbol, int depth, L lambda)
     return save;
 }
 
-std::optional<std::pair<std::string, size_t>>
-DebuggerDwarf::source_from_name(const std::string& symbol)
-{
-    auto lambda = [](const auto& node, const auto& symbol) {
-        for (const auto& attr : node.attributes())
-        {
-            if (auto attribute = to_string(attr.first);
-                attribute == "DW_AT_name")
-                if (auto value = to_string(attr.second); value == symbol)
-                    return true;
-        }
-        return false;
-    };
-    for (const auto& cu : _dw.compilation_units())
-    {
-        auto res = search_tree(cu.root(), symbol, 0, lambda);
-        if (res != std::nullopt)
-            return get_file_name_and_line(res.value());
-    }
-    return save;
-}
-
 size_t DebuggerDwarf::find_line(const size_t index_cu, const uintptr_t pc)
 {
     const auto& cu = _dw.compilation_units()[index_cu];
