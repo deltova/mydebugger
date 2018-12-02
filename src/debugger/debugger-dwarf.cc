@@ -9,7 +9,7 @@ void DebuggerDwarf::get_current_code(std::string input [[maybe_unused]])
 {
     auto current_pc = get_specific_register("rip", _pid) - this->_begin_addr;
     auto res = source_from_pc(current_pc);
-    if (res != std::nullopt)
+    if (res != std::nullopt && res->second != 0)
         std::cout << _cache.get_line(res->first, res->second - 1) << '\n';
     else
         std::cout << "Their is no current source for the current code\n";

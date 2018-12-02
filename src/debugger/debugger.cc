@@ -162,6 +162,10 @@ void Debugger::continue_handler(std::string input [[maybe_unused]])
 
 void Debugger::print_handler(std::string input)
 {
+    if (input.size() < 2)
+    {
+        std::cout << "print takes an arguement\n";
+    }
     auto command = std::string(input.begin() + 2, input.end());
     if (command.size() > 2 && command[0] == '0' && command[1] == 'x')
     {
