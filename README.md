@@ -2,7 +2,7 @@
 
 This project is a debugger that target compiled language like C/C++.
 
-It targets ELF binary and in the future Dwarf format for the debug info.
+It targets ELF binary and Dwarf format for the debug info.
 
 ## Getting Started
 
