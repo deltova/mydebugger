@@ -1,8 +1,8 @@
 #include "file_cacher.hh"
 #include <fstream>
 
-std::string FileCacher::get_line(const std::string& file_path,
-                                 const size_t line)
+std::optional<std::string> FileCacher::get_line(const std::string& file_path,
+                                                const size_t line)
 {
     auto element = _container.find(file_path);
     if (element == _container.end())
@@ -10,6 +10,8 @@ std::string FileCacher::get_line(const std::string& file_path,
         load_file(file_path);
         element = _container.find(file_path);
     }
+    if (element->second.size() <= line)
+        return {};
     return element->second[line];
 }
 

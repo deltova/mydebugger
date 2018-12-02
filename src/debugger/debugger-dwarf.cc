@@ -5,12 +5,30 @@ static bool contains_pc(uintptr_t low, uintptr_t high, uintptr_t pc)
     return low <= pc && pc <= low + high;
 }
 
-void DebuggerDwarf::get_current_code(std::string input [[maybe_unused]])
+static int get_number_line(const std::string& input)
 {
+    if (input.size() <= 2)
+        return 1;
+    return strtol(std::string(input.begin() + 2, input.end()).c_str(), NULL, 0);
+}
+
+void DebuggerDwarf::get_current_code(std::string input)
+{
+    const auto number_line = get_number_line(input);
     auto current_pc = get_specific_register("rip", _pid) - this->_begin_addr;
     auto res = source_from_pc(current_pc);
     if (res != std::nullopt && res->second != 0)
-        std::cout << _cache.get_line(res->first, res->second - 1) << '\n';
+    {
+        std::cout << res->first << "\n";
+        for (auto i = 0; i < number_line; ++i)
+        {
+            auto line = _cache.get_line(res->first, res->second + i - 1);
+            if (line == std::nullopt)
+                break;
+            std::cout << res->second + i - 1 << ": ";
+            std::cout << *line << '\n';
+        }
+    }
     else
         std::cout << "Their is no current source for the current code\n";
 }
@@ -38,7 +56,8 @@ DebuggerDwarf::DebuggerDwarf(int pid, std::string program_name)
             else if (to_string(attr.first) == "DW_AT_high_pc")
                 high_pc = strtol(to_string(attr.second).c_str(), NULL, 0);
         }
-        filename = path + '/' + filename;
+        if (filename[0] != '/')
+            filename = path + '/' + filename;
         _source_files.push_back(CompileUnit(low_pc, high_pc, filename));
         _input_handlers_dwarf["l"] = &DebuggerDwarf::get_current_code;
     }

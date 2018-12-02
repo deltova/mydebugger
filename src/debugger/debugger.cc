@@ -62,7 +62,7 @@ void Debugger::help_handler(std::string input [[maybe_unused]])
               << "\ts: Go to next instruction\n"
               << "\tp $register: print the value of the $register\n"
               << "\tp 0xaddr: print the content at $addr\n"
-              << "\tl: get the source file and line of the current executed"
+              << "\tl [n]: get [n]  line of the current source"
               << " code\n";
 }
 
