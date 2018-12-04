@@ -1,10 +1,5 @@
 #include "debugger-dwarf.h"
 
-static bool contains_pc(uintptr_t low, uintptr_t high, uintptr_t pc)
-{
-    return low <= pc && pc <= low + high;
-}
-
 static int get_number_line(const std::string& input)
 {
     if (input.size() <= 2)
@@ -113,50 +108,27 @@ search_tree(const dwarf::die& node, const T& symbol, int depth, L lambda)
     return save;
 }
 
-size_t DebuggerDwarf::find_line(const size_t index_cu, const uintptr_t pc)
+std::optional<std::pair<std::string, size_t>>
+DebuggerDwarf::find_line(const uintptr_t pc)
 {
-    const auto& cu = _dw.compilation_units()[index_cu];
-    const auto& lines = cu.get_line_table();
-    auto prev = lines.begin();
-    for (auto line = lines.begin(); line != lines.end(); line++)
+    for (const auto& cu : _dw.compilation_units())
     {
-        if (pc == line->address)
-            return line->line;
-        else if (pc > prev->address && pc < line->address)
-            return prev->line;
-        prev = line;
+        const auto& lines = cu.get_line_table();
+        auto prev = lines.begin();
+        for (auto line = lines.begin(); line != lines.end(); line++)
+        {
+            if (pc == line->address)
+                return std::make_pair(line->file->path, line->line);
+            else if (pc > prev->address && pc < line->address)
+                return std::make_pair(prev->file->path, prev->line);
+            prev = line;
+        }
     }
-    return 0;
+    return {};
 }
 
 std::optional<std::pair<std::string, size_t>>
 DebuggerDwarf::source_from_pc(const uintptr_t& pc_val)
 {
-    auto lambda = [](const auto& node, const auto& pc) {
-        uintptr_t low = 0;
-        uintptr_t high = 0;
-        for (const auto& attr : node.attributes())
-        {
-            const auto attribute = to_string(attr.first);
-            if (attribute == "DW_AT_low_pc")
-                low = strtol(to_string(attr.second).c_str(), NULL, 0);
-            else if (attribute == "DW_AT_high_pc")
-                high = strtol(to_string(attr.second).c_str(), NULL, 0);
-        }
-        return contains_pc(low, high, pc);
-    };
-    const auto& cus = _dw.compilation_units();
-    for (size_t i = 0; i < cus.size(); ++i)
-    {
-        auto low = _source_files[i].low_pc;
-        auto high = _source_files[i].high_pc;
-        if (!contains_pc(low, high, pc_val))
-            continue;
-        auto res = search_tree(cus[i].root(), pc_val, 0, lambda);
-
-        if (res != std::nullopt)
-            return std::make_pair(_source_files[i].filename,
-                                  find_line(i, pc_val));
-    }
-    return {};
+    return find_line(pc_val);
 }
