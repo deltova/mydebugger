@@ -22,7 +22,7 @@ static int exec_and_trace(int argc, char** argv)
     if (argc == 2)
         return execvp(argv[1], nullptr);
     else
-        return execvp(argv[1], argv + 2);
+        return execvp(argv[1], argv + 1);
 }
 
 int main(int argc, char** argv)
