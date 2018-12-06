@@ -29,6 +29,8 @@ class DebuggerDwarf : public Debugger
 
     void call_correct(const std::string& input) override;
 
+    void next_handler(std::string input);
+
   protected:
     std::pair<std::string, size_t>
     get_file_name_and_line(const dwarf::die& die);

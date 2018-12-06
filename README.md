@@ -45,11 +45,11 @@ Available command:
         d: Disas from rip value
         d $0xaddr: Disas from 0xaddr
         h: print the helper of commands
+        n: go to the next line of code
         s: Go to next instruction
         p $register: print the value of the $register
         p 0xaddr: print the content at $addr
         l [n]: get [n]  line of the current source code
-
 ```
 
 ## Authors

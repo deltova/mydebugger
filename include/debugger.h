@@ -49,6 +49,8 @@ class Debugger : public MemoryMapping
     void step_handler(std::string input);
 
   protected:
+    void stepper(void);
+    uintptr_t get_static_pc();
     uintptr_t resolve_addr(std::string value);
     int _pid;
     std::string _program_name;

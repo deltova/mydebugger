@@ -28,6 +28,10 @@ static std::vector<std::string> tokenize(std::string str)
     return results;
 }
 
+uintptr_t Debugger::get_static_pc()
+{
+    return get_specific_register("rip", _pid) - this->_begin_addr;
+}
 void Debugger::call_correct(const std::string& input)
 {
     auto beg = input.begin();
@@ -59,6 +63,7 @@ void Debugger::help_handler(std::string input [[maybe_unused]])
               << "\td: Disas from rip value\n"
               << "\td $0xaddr: Disas from 0xaddr\n"
               << "\th: print the helper of commands\n"
+              << "\tn: go to the next line of code\n"
               << "\ts: Go to next instruction\n"
               << "\tp $register: print the value of the $register\n"
               << "\tp 0xaddr: print the content at $addr\n"
@@ -178,14 +183,19 @@ void Debugger::print_handler(std::string input)
                   << std::dec << '\n';
 }
 
-void Debugger::step_handler(std::string input [[maybe_unused]])
+void Debugger::stepper(void)
 {
     int status;
     long ret = ptrace(PTRACE_SINGLESTEP, _pid, NULL, NULL);
     if (ret == -1)
         std::cerr << "ERROR SINGLESTEP\n";
     waitpid(_pid, &status, 0);
-    print_register(_pid, std::string("rip"));
     if (!WEXITSTATUS(status))
         std::cerr << "Programm stopped\n";
+}
+
+void Debugger::step_handler(std::string input [[maybe_unused]])
+{
+    stepper();
+    print_register(_pid, std::string("rip"));
 }

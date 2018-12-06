@@ -1,4 +1,5 @@
 #include "debugger-dwarf.h"
+#include <iomanip>
 
 static int get_number_line(const std::string& input)
 {
@@ -55,8 +56,10 @@ DebuggerDwarf::DebuggerDwarf(int pid, std::string program_name)
             filename = path + '/' + filename;
         _source_files.push_back(CompileUnit(low_pc, high_pc, filename));
         _input_handlers_dwarf["l"] = &DebuggerDwarf::get_current_code;
+        _input_handlers_dwarf["n"] = &DebuggerDwarf::next_handler;
     }
 }
+
 void DebuggerDwarf::call_correct(const std::string& input)
 {
     auto beg = input.begin();
@@ -131,4 +134,22 @@ std::optional<std::pair<std::string, size_t>>
 DebuggerDwarf::source_from_pc(const uintptr_t& pc_val)
 {
     return find_line(pc_val);
+}
+
+void DebuggerDwarf::next_handler([[maybe_unused]] std::string input)
+{
+    auto file_position = find_line(get_static_pc());
+    if (file_position == std::nullopt)
+    {
+        std::cout << "no debug info in this position\n";
+        return;
+    }
+    decltype(file_position) new_pos;
+    do
+    {
+        this->stepper();
+        new_pos = find_line(get_static_pc());
+    } while (new_pos == std::nullopt ||
+             file_position->first != new_pos->first ||
+             file_position->second == new_pos->second);
 }
