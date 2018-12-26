@@ -1,0 +1,9 @@
+[submodule "capstone"]
+	path = capstone
+	url = git@github.com:aquynh/capstone.git
+[submodule "libelfin"]
+	path = libelfin
+	url = git@github.com:aclements/libelfin.git
+[submodule "binutils-gdb"]
+	path = binutils-gdb
+	url = git://sourceware.org/git/binutils-gdb.git
