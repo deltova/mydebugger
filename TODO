@@ -1,8 +1,5 @@
 Accelerate breakpoint continue using hardware bp
 
-Try libdwarf++ and libelf++
-
 Use Dwarf info:
     break on specific line
-    print code
     allow user to print variable
